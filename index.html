@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jeevan N — nj2216</title>
+<meta name="description" content="Jeevan N — systems &amp; kernel developer, indie game dev, founder of Code Boole Studio.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%230b0c0d%22/><text x=%2250%22 y=%2268%22 font-size=%2260%22 fill=%22%23c9682a%22 text-anchor=%22middle%22 font-family=%22monospace%22>_</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:        #f3f0e7;
+    --bg-panel:  #fbfaf6;
+    --bg-raised: #ece7da;
+    --line:      #d9d3c3;
+    --line-soft: #e4dfd0;
+    --text:      #2b2822;
+    --text-dim:  #6f6a5c;
+    --text-faint:#9c9686;
+    --accent:    #d1481a;
+    --accent-2:  #b03d16;
+    --accent-dim:#f3d3c0;
+    --ok:        #77216f;
+    --link:      #a8461f;
+    --radius: 0px;
+    --mono: 'VT323', 'JetBrains Mono', 'SF Mono', monospace;
+    --pixel: 'Press Start 2P', 'VT323', monospace;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(209,72,26,0.07), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:19px;
+    line-height:1.5;
+    -webkit-font-smoothing:none;
+    min-height:100vh;
+    position:relative;
+  }
+
+  /* CRT scanline overlay — vintage bitmap feel */
+  body::after{
+    content:"";
+    position:fixed; inset:0; z-index:200; pointer-events:none;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(43,40,34,0.05) 0px,
+      rgba(43,40,34,0.05) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    mix-blend-mode:multiply;
+  }
+
+  ::selection{background:var(--accent-dim); color:var(--text);}
+
+  a{color:var(--link); text-decoration:none; border-bottom:1px solid transparent;}
+  a:hover{color:var(--accent-2); border-bottom-color:var(--accent-2);}
+  a:focus-visible, button:focus-visible{outline:2px solid var(--accent-2); outline-offset:2px;}
+
+  .wrap{max-width:860px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- top chrome ---------- */
+  .titlebar{
+    position:sticky; top:0; z-index:50;
+    background:var(--bg);
+    border-bottom:2px solid var(--line);
+  }
+  .titlebar-inner{
+    max-width:860px; margin:0 auto; padding:0 24px;
+    display:flex; align-items:center; justify-content:space-between;
+    height:44px;
+  }
+  .dots{display:flex; gap:7px;}
+  .dots span{width:10px; height:10px; border-radius:0; display:inline-block;}
+  .dots span:nth-child(1){background:#8a8474;}
+  .dots span:nth-child(2){background:#8a8474;}
+  .dots span:nth-child(3){background:#8a8474;}
+  .titlebar-path{color:var(--text-faint); font-size:15px;}
+  .titlebar-nav{display:flex; gap:18px; font-size:15px;}
+  .titlebar-nav a{color:var(--text-dim); border-bottom:none;}
+  .titlebar-nav a:hover{color:var(--accent-2);}
+  @media (max-width:640px){ .titlebar-nav{display:none;} }
+
+  /* ---------- hero / terminal ---------- */
+  .hero{padding:64px 0 40px;}
+  .terminal{
+    background:var(--bg-panel);
+    border:2px solid var(--line);
+    border-radius:0;
+    overflow:hidden;
+    box-shadow:8px 8px 0 var(--line);
+  }
+  .terminal-head{
+    display:flex; align-items:center; gap:8px;
+    padding:10px 14px;
+    border-bottom:2px solid var(--line);
+    background:var(--bg-raised);
+  }
+  .terminal-head .dots span:nth-child(1){background:var(--accent);}
+  .terminal-head .dots span:nth-child(2){background:#8a8474;}
+  .terminal-head .dots span:nth-child(3){background:#8a8474;}
+  .terminal-title{color:var(--text-faint); font-size:15px; margin:0 auto; padding-right:44px; font-family:var(--pixel); font-size:10px; letter-spacing:0.02em;}
+  .terminal-body{padding:22px 20px 26px; font-size:19px;}
+  .terminal-body .line{white-space:pre-wrap; word-break:break-word;}
+  .prompt{color:var(--ok);}
+  .prompt-path{color:var(--accent-2);}
+  .prompt-sym{color:var(--text-dim);}
+  .out{color:var(--text-dim); margin:4px 0 14px;}
+  .out b{color:var(--text); font-weight:600;}
+  .cursor{display:inline-block; width:8px; height:16px; background:var(--accent-2); vertical-align:-3px; animation:blink 1s steps(1) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+  @media (prefers-reduced-motion: reduce){ .cursor{animation:none;} html{scroll-behavior:auto;} }
+
+  .role-line{margin-top:2px; color:var(--text);}
+  .role-line .accent{color:var(--accent-2);}
+
+  .hero-links{display:flex; gap:16px; flex-wrap:wrap; margin-top:18px; font-size:16px;}
+  .hero-links a{color:var(--text-dim); border-bottom:1px dashed var(--line);}
+  .hero-links a:hover{color:var(--accent-2); border-bottom-color:var(--accent-2);}
+
+  /* ---------- section shell ---------- */
+  section{padding:52px 0;}
+  section + section{border-top:1px solid var(--line-soft);}
+  .sec-head{display:flex; align-items:baseline; gap:10px; margin-bottom:22px;}
+  .sec-cmd{color:var(--text-faint); font-size:16px;}
+  .sec-title{font-family:var(--pixel); font-size:11px; letter-spacing:0.03em; text-transform:uppercase; color:var(--accent-2); font-weight:400;}
+
+  /* ---------- about ---------- */
+  .about-grid{display:grid; grid-template-columns: 1.4fr 1fr; gap:40px;}
+  @media (max-width:700px){ .about-grid{grid-template-columns:1fr;} }
+  .about-text p{color:var(--text-dim); margin-bottom:14px;}
+  .about-text strong{color:var(--text); font-weight:600;}
+  .kv{border:2px solid var(--line); border-radius:0; overflow:hidden;}
+  .kv-row{display:flex; justify-content:space-between; gap:12px; padding:9px 12px; font-size:16px;}
+  .kv-row + .kv-row{border-top:2px solid var(--line-soft);}
+  .kv-row .k{color:var(--text-faint);}
+  .kv-row .v{color:var(--text); text-align:right;}
+
+  .stack-tags{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px;}
+  .tag{
+    font-size:14px; color:var(--text-dim);
+    border:2px solid var(--line); border-radius:0;
+    padding:3px 10px;
+  }
+
+  /* ---------- projects (ls -la table) ---------- */
+  .proj-table{width:100%; border-collapse:collapse; font-size:16px;}
+  .proj-table thead th{
+    text-align:left; color:var(--text-faint); font-weight:500;
+    font-family:var(--pixel); font-size:9px; letter-spacing:0.02em; text-transform:uppercase;
+    padding:0 10px 12px; border-bottom:2px solid var(--line);
+  }
+  .proj-table tbody tr{border-bottom:2px solid var(--line-soft); transition:background 0.15s;}
+  .proj-table tbody tr:hover{background:var(--bg-panel);}
+  .proj-table td{padding:12px 10px; vertical-align:top;}
+  .perm{color:var(--text-faint); font-size:15px; white-space:nowrap;}
+  .perm .rx{color:var(--ok);}
+  .perm .priv{color:var(--accent);}
+  .proj-name{color:var(--text); font-weight:600;}
+  .proj-name a{color:var(--text); border-bottom:1px solid var(--line);}
+  .proj-name a:hover{color:var(--accent-2); border-bottom-color:var(--accent-2);}
+  .proj-desc{color:var(--text-dim); font-size:15px; max-width:340px;}
+  .proj-lang{color:var(--accent-2); font-size:15px; white-space:nowrap;}
+  .status-dot{display:inline-block; width:8px; height:8px; border-radius:0; margin-right:6px;}
+  .status-active .status-dot{background:var(--ok);}
+  .status-wip .status-dot{background:var(--accent);}
+  .status-archived .status-dot{background:var(--text-faint);}
+
+  @media (max-width:640px){
+    .proj-table thead{display:none;}
+    .proj-table, .proj-table tbody, .proj-table tr, .proj-table td{display:block; width:100%;}
+    .proj-table tr{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+    .proj-table td{padding:2px 0;}
+    .proj-desc{max-width:none;}
+  }
+
+  /* ---------- now ---------- */
+  .now-list{list-style:none;}
+  .now-list li{
+    position:relative; padding-left:20px; margin-bottom:12px;
+    color:var(--text-dim); font-size:16px;
+  }
+  .now-list li::before{
+    content:"▸"; position:absolute; left:0; color:var(--accent);
+  }
+  .now-list li b{color:var(--text); font-weight:600;}
+  .uptime{
+    margin-top:22px; font-size:15px; color:var(--text-faint);
+    border-top:2px dashed var(--line); padding-top:16px;
+  }
+
+  /* ---------- studio ---------- */
+  .studio-card{
+    border:2px solid var(--line); border-left:6px solid var(--accent);
+    border-radius:0; padding:22px 24px; background:var(--bg-panel);
+    box-shadow:6px 6px 0 var(--line-soft);
+  }
+  .studio-card h3{font-family:var(--pixel); font-size:13px; color:var(--text); margin-bottom:12px; line-height:1.6;}
+  .studio-card p{color:var(--text-dim); font-size:16px; margin-bottom:14px;}
+  .studio-cta{font-size:15px;}
+
+  /* ---------- contact / footer ---------- */
+  .contact-body{font-size:16px;}
+  .contact-body .line{margin-bottom:8px;}
+  .man-key{color:var(--accent-2); display:inline-block; width:120px;}
+  footer{padding:34px 0 60px; color:var(--text-faint); font-size:14px;}
+  footer .line{white-space:pre-wrap;}
+
+  h1,h2{font-family:var(--mono);}
+  ::-webkit-scrollbar{width:12px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--line); border-radius:0;}
+</style>
+</head>
+<body>
+
+<div class="titlebar">
+  <div class="titlebar-inner">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div class="titlebar-path">nj2216@github:~$</div>
+    <nav class="titlebar-nav">
+      <a href="#about">about</a>
+      <a href="#projects">projects</a>
+      <a href="#now">now</a>
+      <a href="#studio">studio</a>
+      <a href="#contact">contact</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="hero" id="top">
+    <div class="terminal">
+      <div class="terminal-head">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <p class="terminal-title">jeevan@nj2216: ~</p>
+      </div>
+      <div class="terminal-body">
+        <p class="line"><span class="prompt">jeevan@nj2216</span><span class="prompt-sym">:</span><span class="prompt-path">~</span><span class="prompt-sym">$</span> whoami</p>
+        <p class="out"><b>Jeevan N</b> — final-year B.S. (Hons) Computer Science, SSSIHL</p>
+
+        <p class="line"><span class="prompt">jeevan@nj2216</span><span class="prompt-sym">:</span><span class="prompt-path">~</span><span class="prompt-sym">$</span> cat role.txt</p>
+        <p class="role-line">Kernel &amp; systems dev · RISC-V internals · indie game dev · founder, <span class="accent">Code&nbsp;Boole&nbsp;Studio</span><span class="cursor"></span></p>
+
+        <div class="hero-links">
+          <a href="https://github.com/nj2216" target="_blank" rel="noopener">github.com/nj2216</a>
+          <a href="https://www.linkedin.com/in/nj2216/" target="_blank" rel="noopener">linkedin/in/nj2216</a>
+          <a href="https://njeevan.vercel.app" target="_blank" rel="noopener">njeevan.vercel.app</a>
+          <a href="#contact">contact →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="sec-head"><span class="sec-cmd">$</span><span class="sec-title">cat about.md</span></div>
+    <div class="about-grid">
+      <div class="about-text">
+        <p>I spend most of my time below the application layer — writing <strong>Linux kernel drivers</strong>, working through <strong>RISC-V</strong> compliance and bring-up on real hardware, and reimplementing userspace primitives from raw syscalls just to understand what's underneath them.</p>
+        <p>Outside of systems work I build <strong>games</strong> as a creative outlet — multiplayer, P2P, physics-driven — and run <strong>Code Boole Studio</strong>, a small freelance practice where I take on web and app builds for clients.</p>
+        <p>Currently finishing my B.S. (Honours) at <strong>SSSIHL, Nandigiri Campus</strong>, with a 12-credit final-year research project underway.</p>
+      </div>
+      <div>
+        <div class="kv">
+          <div class="kv-row"><span class="k">location</span><span class="v">Madurai, Tamil Nadu, IN</span></div>
+          <div class="kv-row"><span class="k">institute</span><span class="v">SSSIHL, Nandigiri</span></div>
+          <div class="kv-row"><span class="k">focus</span><span class="v">kernel · RISC-V · games</span></div>
+          <div class="kv-row"><span class="k">studio</span><span class="v">Code Boole Studio</span></div>
+          <div class="kv-row"><span class="k">status</span><span class="v" style="color:var(--ok)">open to work</span></div>
+        </div>
+        <div class="stack-tags">
+          <span class="tag">C</span><span class="tag">C++</span><span class="tag">Python</span>
+          <span class="tag">TypeScript</span><span class="tag">React</span><span class="tag">Electron</span>
+          <span class="tag">Next.js</span><span class="tag">Flask</span><span class="tag">FastAPI</span>
+          <span class="tag">Linux</span><span class="tag">RISC-V</span><span class="tag">QEMU</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="projects">
+    <div class="sec-head"><span class="sec-cmd">$</span><span class="sec-title">ls -la ~/projects</span></div>
+    <table class="proj-table">
+      <thead>
+        <tr><th>perms</th><th>name</th><th>lang</th><th>description</th></tr>
+      </thead>
+      <tbody>
+        <tr class="status-active">
+          <td class="perm"><span class="rx">drwxr-xr-x</span></td>
+          <td class="proj-name"><a href="https://github.com/nj2216/openrvbench" target="_blank" rel="noopener">openrvbench</a></td>
+          <td class="proj-lang">C++17 / Python</td>
+          <td class="proj-desc"><span class="status-dot"></span>Open-source RISC-V benchmark suite — CPU, RVV, memory, crypto, storage, thermal — for boards like the Orange Pi RV2.</td>
+        </tr>
+        <tr class="status-active">
+          <td class="perm"><span class="rx">drwxr-xr-x</span></td>
+          <td class="proj-name"><a href="https://github.com/nj2216/linux-driver-programs" target="_blank" rel="noopener">linux-driver-programs</a></td>
+          <td class="proj-lang">C</td>
+          <td class="proj-desc"><span class="status-dot"></span>Kernel driver curriculum on QEMU RISC-V — char devices, platform drivers, Device Tree overlays, devm_* resource handling.</td>
+        </tr>
+        <tr class="status-active">
+          <td class="perm"><span class="rx">drwxr-xr-x</span></td>
+          <td class="proj-name"><a href="https://github.com/nj2216/linux-programs" target="_blank" rel="noopener">linux-internals-practice</a></td>
+          <td class="proj-lang">C / POSIX</td>
+          <td class="proj-desc"><span class="status-dot"></span>Kernel subsystems from userspace — process lifecycle, signal handling, raw syscall-level I/O with no libc wrappers.</td>
+        </tr>
+        <tr class="status-active">
+          <td class="perm"><span class="rx">drwxr-xr-x</span></td>
+          <td class="proj-name"><a href="https://github.com/nj2216/riscv-binary-intelligence" target="_blank" rel="noopener">riscv-binary-intelligence</a></td>
+          <td class="proj-lang">Python / FastAPI</td>
+          <td class="proj-desc"><span class="status-dot"></span>RISC-V binary analysis toolkit — ELF parsing and ISA detection.</td>
+        </tr>
+        <tr class="status-wip">
+          <td class="perm"><span class="rx">drwxrwxr-x</span></td>
+          <td class="proj-name">sabotage studio</td>
+          <td class="proj-lang">TypeScript</td>
+          <td class="proj-desc"><span class="status-dot"></span>Browser-based asymmetric multiplayer party game — host-authoritative P2P over PeerJS, Express, Supabase.</td>
+        </tr>
+        <tr class="status-active">
+          <td class="perm"><span class="rx">drwxr-xr-x</span></td>
+          <td class="proj-name"><a href="https://github.com/nj2216/cinecut" target="_blank" rel="noopener">cinecut</a></td>
+          <td class="proj-lang">Electron / React</td>
+          <td class="proj-desc"><span class="status-dot"></span>Desktop app for trimming movie scenes, censoring audio, and filtering subtitle content — built on FFmpeg.</td>
+        </tr>
+        <tr class="status-wip">
+          <td class="perm"><span class="priv">drwx------</span></td>
+          <td class="proj-name">SaiRaksha</td>
+          <td class="proj-lang">Python / Edge AI</td>
+          <td class="proj-desc"><span class="status-dot"></span>Cloud-connected wearable health monitor — in progress.</td>
+        </tr>
+        <tr class="status-archived">
+          <td class="perm"><span class="rx">drwxr-xr-x</span></td>
+          <td class="proj-name"><a href="https://github.com/nj2216/jyinit" target="_blank" rel="noopener">jyinit</a></td>
+          <td class="proj-lang">Python</td>
+          <td class="proj-desc"><span class="status-dot"></span>Lightweight project scaffolder.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="now">
+    <div class="sec-head"><span class="sec-cmd">$</span><span class="sec-title">tail -f now.log</span></div>
+    <ul class="now-list">
+      <li>Booting mainline <b>Linux</b> on an Orange Pi RV2 (SpacemiT K1) through a hand-built OpenSBI → U-Boot → kernel cross-compilation pipeline.</li>
+      <li>Extending <b>OpenRVBench</b> with RVA23U64 / RVB23U64 compliance testing against the RVA23S64 profile spec.</li>
+      <li>Working through Stage 2 of a Linux driver curriculum — Device Tree overlays and platform drivers on QEMU virt.</li>
+      <li>Wrapping up a 12-credit final-year research project at SSSIHL.</li>
+    </ul>
+    <p class="uptime">last updated: 2026 · status: <span style="color:var(--ok)">online</span></p>
+  </section>
+
+  <section id="studio">
+    <div class="sec-head"><span class="sec-cmd">$</span><span class="sec-title">cat studio.md</span></div>
+    <div class="studio-card">
+      <h3>Code Boole Studio</h3>
+      <p>A small freelance/creative-coding studio I founded — named after George Boole. I take on web and app builds for clients, from marketing sites to full-stack product work, alongside my own systems research.</p>
+      <p class="studio-cta"><a href="#contact">→ get in touch about a project</a></p>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="sec-head"><span class="sec-cmd">$</span><span class="sec-title">man contact</span></div>
+    <div class="contact-body">
+      <p class="line"><span class="man-key">GitHub</span><a href="https://github.com/nj2216" target="_blank" rel="noopener">github.com/nj2216</a></p>
+      <p class="line"><span class="man-key">LinkedIn</span><a href="https://www.linkedin.com/in/nj2216/" target="_blank" rel="noopener">linkedin.com/in/nj2216</a></p>
+      <p class="line"><span class="man-key">Website</span><a href="https://njeevan.vercel.app" target="_blank" rel="noopener">njeevan.vercel.app</a></p>
+      <p class="line"><span class="man-key">Studio</span><span>Code Boole Studio</span></p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <p class="line">// built with a terminal in mind. edit freely — it's your repo now.</p>
+    <p class="line">© 2026 Jeevan N</p>
+  </div>
+</footer>
+
+</body>
+</html>
